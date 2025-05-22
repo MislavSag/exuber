@@ -1,5 +1,3 @@
-options(progress_enabled = FALSE)
-
 library(data.table)
 library(finfeatures)
 
@@ -44,9 +42,9 @@ ohlcv = Ohlcv$new(ohlcv[, .(symbol, date, open, high, low, close, volume)],
 exuber_init = RollingExuber$new(
   windows = c(100, 200, 400, 800),
   workers = 1L,
-  at = 1:220, # nrow(ohlcv$X),
+  at = 1:nrow(ohlcv$X),
   lag = 0L,
-  exuber_lag = c(1L)
+  exuber_lag = c(0L, 1L)
 )
 exuber = exuber_init$get_rolling_features(ohlcv, log_prices = TRUE)
 fwrite(exuber, file.path(PATH_PREDICTORS, paste0(symbol_i, ".csv")))
