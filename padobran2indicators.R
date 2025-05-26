@@ -8,8 +8,10 @@ if (interactive()) {
 }
 
 # Create indicators directory if it doesn't exist
-if (!dir.exists(file.path(PATH, "indicators"))) {
-  dir.create(file.path(PATH, "indicators"))
+if (!interactive()) {
+  if (!dir.exists(file.path(PATH, "indicators"))) {
+    dir.create(file.path(PATH, "indicators"))
+  }
 }
 
 # DATA --------------------------------------------------------------------
