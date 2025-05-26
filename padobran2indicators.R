@@ -31,7 +31,7 @@ if (interactive()) {
 if (interactive()) {
   files = list.files(file.path(PATH, "predictors"), full.names = TRUE)
 } else {
-  files = list.files("predictors", full.names = TRUE)[i]
+  files = list.files("predictors", full.names = TRUE)
 }
 
 # Import predictors in chunks Predictors
