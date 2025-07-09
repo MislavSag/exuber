@@ -15,6 +15,7 @@ if (interactive()) {
   }
 }
 
+
 # DATA --------------------------------------------------------------------
 # Check columns
 # colnames(fread(list.files(file.path(PATH, "predictors"), full.names = TRUE)[1]))
@@ -60,6 +61,12 @@ setnames(indicators_mean, radf_vars, paste0("mean_", radf_vars))
 # Sum aggreagation
 indicators_sum = dt[, lapply(.SD, sum, na.rm = TRUE), by = c('date'), .SDcols = radf_vars]
 setnames(indicators_sum, radf_vars, paste0("sum_", radf_vars))
+
+# Expected Shartfall
+indicators_es = dt[, lapply(.SD, function(x) {
+  if (length(x) < 2) return(NA_real_)
+  PerformanceAnalytics::ES(diff(x), p = 0.05, method = "modified")
+}), by = date, .SDcols = radf_vars]
 
 # Merge indicators
 indicators = Reduce(
