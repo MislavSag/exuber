@@ -12,7 +12,8 @@ library(roll)
 PATH = "D:/strategies/exuber"
 
 # Paramters
-SAMPLE = Inf # can be 100, 500, 1000, Inf
+SAMPLE = 500 # can be 100, 500, 1000, Inf
+ALT    = TRUE
 
 
 # DATA --------------------------------------------------------------------
@@ -32,8 +33,10 @@ spy = data[symbol == "spy"]
 # spy = spy[date >= tlt[, min(date)]]
 
 # Second try, tlt and spy together
-prices_dt = dcast(data, date ~ symbol, value.var = c("open", "close"))
-prices_dt = na.omit(prices_dt)
+if (ALT == TRUE) {
+  prices_dt = dcast(data, date ~ symbol, value.var = c("open", "close"))
+  prices_dt = na.omit(prices_dt)
+}
 
 # Import indicatora
 if (SAMPLE== 100) {
@@ -50,26 +53,80 @@ if (SAMPLE== 100) {
 
 # Create meta indicators as sum of individual indicators for every window
 cols = colnames(indicators)
-cols[grep("sd.*800_0", cols)]
-indicators_agg = cbind(
-  indicators[,.(date)],
-  indicators[,.(sd_0800_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*800_0", cols)]],
-  indicators[,.(sd_0800_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*800_1", cols)]],
-  indicators[,.(sd_0400_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*400_0", cols)]],
-  indicators[,.(sd_0400_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*400_1", cols)]],
-  indicators[,.(sd_0200_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*200_0", cols)]],
-  indicators[,.(sd_0200_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*200_1", cols)]],
-  indicators[,.(sd_0100_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*100_0", cols)]],
-  indicators[,.(sd_0100_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*100_1", cols)]],
-  indicators[,.(mean_0800_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*800_0", cols)]],
-  indicators[,.(mean_0800_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*800_1", cols)]],
-  indicators[,.(mean_0400_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*400_0", cols)]],
-  indicators[,.(mean_0400_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*400_1", cols)]],
-  indicators[,.(mean_0200_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*200_0", cols)]],
-  indicators[,.(mean_0200_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*200_1", cols)]],
-  indicators[,.(mean_0100_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*100_0", cols)]],
-  indicators[,.(mean_0100_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*100_1", cols)]]
-)
+cols[grep("var.*800_0", cols)]
+if (is.infinite(SAMPLE)) {
+  indicators_agg = cbind(
+    indicators[,.(date)],
+    indicators[,.(sd_0800_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*800_0", cols)]],
+    indicators[,.(sd_0800_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*800_1", cols)]],
+    indicators[,.(sd_0400_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*400_0", cols)]],
+    indicators[,.(sd_0400_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*400_1", cols)]],
+    indicators[,.(sd_0200_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*200_0", cols)]],
+    indicators[,.(sd_0200_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*200_1", cols)]],
+    indicators[,.(sd_0100_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*100_0", cols)]],
+    indicators[,.(sd_0100_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*100_1", cols)]],
+    indicators[,.(mean_0800_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*800_0", cols)]],
+    indicators[,.(mean_0800_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*800_1", cols)]],
+    indicators[,.(mean_0400_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*400_0", cols)]],
+    indicators[,.(mean_0400_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*400_1", cols)]],
+    indicators[,.(mean_0200_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*200_0", cols)]],
+    indicators[,.(mean_0200_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*200_1", cols)]],
+    indicators[,.(mean_0100_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*100_0", cols)]],
+    indicators[,.(mean_0100_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*100_1", cols)]]
+    )
+} else {
+  indicators_agg = cbind(
+    indicators[,.(date)],
+    indicators[,.(sd_0800_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*800_0", cols)]],
+    indicators[,.(sd_0800_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*800_1", cols)]],
+    indicators[,.(sd_0400_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*400_0", cols)]],
+    indicators[,.(sd_0400_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*400_1", cols)]],
+    indicators[,.(sd_0200_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*200_0", cols)]],
+    indicators[,.(sd_0200_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*200_1", cols)]],
+    indicators[,.(sd_0100_0 = rowSums(.SD)), .SDcols = cols[grep("sd.*100_0", cols)]],
+    indicators[,.(sd_0100_1 = rowSums(.SD)), .SDcols = cols[grep("sd.*100_1", cols)]],
+    indicators[,.(mean_0800_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*800_0", cols)]],
+    indicators[,.(mean_0800_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*800_1", cols)]],
+    indicators[,.(mean_0400_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*400_0", cols)]],
+    indicators[,.(mean_0400_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*400_1", cols)]],
+    indicators[,.(mean_0200_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*200_0", cols)]],
+    indicators[,.(mean_0200_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*200_1", cols)]],
+    indicators[,.(mean_0100_0 = rowSums(.SD)), .SDcols = cols[grep("mean.*100_0", cols)]],
+    indicators[,.(mean_0100_1 = rowSums(.SD)), .SDcols = cols[grep("mean.*100_1", cols)]],
+    indicators[,.(var05_0800_0 = rowSums(.SD)), .SDcols = cols[grep("var05.*800_0", cols)]],
+    indicators[,.(var05_0800_1 = rowSums(.SD)), .SDcols = cols[grep("var05.*800_1", cols)]],
+    indicators[,.(var05_0400_0 = rowSums(.SD)), .SDcols = cols[grep("var05.*400_0", cols)]],
+    indicators[,.(var05_0400_1 = rowSums(.SD)), .SDcols = cols[grep("var05.*400_1", cols)]],
+    indicators[,.(var05_0200_0 = rowSums(.SD)), .SDcols = cols[grep("var05.*200_0", cols)]],
+    indicators[,.(var05_0200_1 = rowSums(.SD)), .SDcols = cols[grep("var05.*200_1", cols)]],
+    indicators[,.(var05_0100_0 = rowSums(.SD)), .SDcols = cols[grep("var05.*100_0", cols)]],
+    indicators[,.(var05_0100_1 = rowSums(.SD)), .SDcols = cols[grep("var05.*100_1", cols)]],
+    indicators[,.(var01_0800_0 = rowSums(.SD)), .SDcols = cols[grep("var01.*800_0", cols)]],
+    indicators[,.(var01_0800_1 = rowSums(.SD)), .SDcols = cols[grep("var01.*800_1", cols)]],
+    indicators[,.(var01_0400_0 = rowSums(.SD)), .SDcols = cols[grep("var01.*400_0", cols)]],
+    indicators[,.(var01_0400_1 = rowSums(.SD)), .SDcols = cols[grep("var01.*400_1", cols)]],
+    indicators[,.(var01_0200_0 = rowSums(.SD)), .SDcols = cols[grep("var01.*200_0", cols)]],
+    indicators[,.(var01_0200_1 = rowSums(.SD)), .SDcols = cols[grep("var01.*200_1", cols)]],
+    indicators[,.(var01_0100_0 = rowSums(.SD)), .SDcols = cols[grep("var01.*100_0", cols)]],
+    indicators[,.(var01_0100_1 = rowSums(.SD)), .SDcols = cols[grep("var01.*100_1", cols)]],
+    indicators[,.(cvar05_0800_0 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*800_0", cols)]],
+    indicators[,.(cvar05_0800_1 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*800_1", cols)]],
+    indicators[,.(cvar05_0400_0 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*400_0", cols)]],
+    indicators[,.(cvar05_0400_1 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*400_1", cols)]],
+    indicators[,.(cvar05_0200_0 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*200_0", cols)]],
+    indicators[,.(cvar05_0200_1 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*200_1", cols)]],
+    indicators[,.(cvar05_0100_0 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*100_0", cols)]],
+    indicators[,.(cvar05_0100_1 = rowSums(.SD)), .SDcols = cols[grep("cvar05.*100_1", cols)]],
+    indicators[,.(cvar01_0800_0 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*800_0", cols)]],
+    indicators[,.(cvar01_0800_1 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*800_1", cols)]],
+    indicators[,.(cvar01_0400_0 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*400_0", cols)]],
+    indicators[,.(cvar01_0400_1 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*400_1", cols)]],
+    indicators[,.(cvar01_0200_0 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*200_0", cols)]],
+    indicators[,.(cvar01_0200_1 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*200_1", cols)]],
+    indicators[,.(cvar01_0100_0 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*100_0", cols)]],
+    indicators[,.(cvar01_0100_1 = rowSums(.SD)), .SDcols = cols[grep("cvar01.*100_1", cols)]]
+  )
+}
 
 # Market cap
 # mcap = qc_daily(
@@ -129,7 +186,7 @@ colnames(indicators)
 
 # Plot returns across deciles
 cols_choose = colnames(backtest_data)[grepl("800_1", colnames(backtest_data))]
-var_ = "mean_0800_1"
+var_ = "cvar05_0800_0"
 backtest_data[, .(date, target_hour, decile = dplyr::ntile(x, 10)), env = list(x = var_)] |>
   _[, mean(target_hour), by = decile] |>
   ggplot(aes(x = decile, y = V1)) +
@@ -258,7 +315,7 @@ backtest_data[trend == FALSE, .(date, target_week, decile = dplyr::ntile(x, 10))
 
 # Simple backtest
 dt_ = backtest_data[, .(date, target_hour, x, close), env = list(x = var_)] # , target_hour_tlt
-dt_[, x := EMA(x, 7*2), env = list(x = var_)]
+dt_[, x := EMA(x, 2), env = list(x = var_)]
 dt_[, trend := close / shift(close, n = 7 * 22) - 1]
 dt_[, let(
   q90 = roll_quantile(x, width = length(x), p = 0.90, min_obs = 500L),
@@ -273,23 +330,23 @@ dt_[, let(
 ), env = list(x = var_)]
 max_leverage = 2
 # dt_[, signal := fcase(
-#   x < q10 & trend > 0, max_leverage,
-#   x < q20 & trend > 0, max_leverage * 1,
-#   x < q30 & trend > 0, max_leverage * 1,
-#   x < q40 & trend > 0, max_leverage * 1,
+#   x < q10 & trend > 0, max_leverage * 0,
+#   x < q20 & trend > 0, max_leverage * 0,
+#   x < q30 & trend > 0, max_leverage * 0,
+#   x < q40 & trend > 0, max_leverage * 0,
 #   x < q50 & trend > 0, max_leverage * 0,
 #   x < q60 & trend > 0, max_leverage * 0,
 #   x < q70 & trend > 0, max_leverage * 0,
 #   x < q80 & trend > 0, max_leverage * 0,
-#   x < q90 & trend > 0, max_leverage * 0,
-#   x > q90 & trend > 0, max_leverage * 0,
+#   x < q90 & trend > 0, max_leverage * 1,
+#   x > q90 & trend > 0, max_leverage * 1,
 #   default = 0
 # ), env = list(x = var_)]
 dt_[, signal := fcase(
   x < q10, max_leverage * 1,
   # exponential decrease
-  x < q20, max_leverage * 1,
-  x < q30, max_leverage * 1,
+  x < q20, max_leverage * 0,
+  x < q30, max_leverage * 0,
   x < q40, max_leverage * 0,
   x < q50, max_leverage * 0,
   x < q60, max_leverage * 0,
@@ -329,6 +386,59 @@ lapply(strategy_daily, function(x) min(Drawdowns(x)))
 PerformanceAnalytics::sd.annualized(strategy_daily)
 # charts.PerformanceSummary(strategy_daily["2020/"])
 # SharpeRatio.annualized(strategy_daily["2020/"])
+
+########### TEST #############
+var_ = "cvar01_0800_0"
+dt_ = backtest_data[, .(date, target_hour, x, close), env = list(x = var_)] # , target_hour_tlt
+dt_[, x := EMA(x, 7), env = list(x = var_)]
+window_ = 7*22
+dt_[, let(
+  # q90 = roll_quantile(x, width = window_, p = 0.90, min_obs = window_),
+  # q80 = roll_quantile(x, width = window_, p = 0.80, min_obs = window_),
+  # q70 = roll_quantile(x, width = window_, p = 0.70, min_obs = window_),
+  # q60 = roll_quantile(x, width = window_, p = 0.60, min_obs = window_),
+  # q50 = roll_quantile(x, width = window_, p = 0.50, min_obs = window_),
+  # q40 = roll_quantile(x, width = window_, p = 0.40, min_obs = window_),
+  # q30 = roll_quantile(x, width = window_, p = 0.30, min_obs = window_),
+  # q20 = roll_quantile(x, width = window_, p = 0.20, min_obs = window_),
+  # q10 = roll_quantile(x, width = window_, p = 0.10, min_obs = window_)
+  q90 = roll_quantile(x, width = length(x), p = 0.90, min_obs = 500L),
+  q80 = roll_quantile(x, width = length(x), p = 0.80, min_obs = 500L),
+  q70 = roll_quantile(x, width = length(x), p = 0.70, min_obs = 500L),
+  q60 = roll_quantile(x, width = length(x), p = 0.60, min_obs = 500L),
+  q50 = roll_quantile(x, width = length(x), p = 0.50, min_obs = 500L),
+  q40 = roll_quantile(x, width = length(x), p = 0.40, min_obs = 500L),
+  q30 = roll_quantile(x, width = length(x), p = 0.30, min_obs = 500L),
+  q20 = roll_quantile(x, width = length(x), p = 0.20, min_obs = 500L),
+  q10 = roll_quantile(x, width = length(x), p = 0.10, min_obs = 500L)
+), env = list(x = var_)]
+max_leverage = 2
+dt_[, signal := fcase(
+  x < q10, max_leverage * 0,
+  x < q20, max_leverage * 0,
+  x < q30, max_leverage * 0,
+  x < q40, max_leverage * 0,
+  x < q50, max_leverage * 0,
+  x < q60, max_leverage * 0,
+  x < q70, max_leverage * 0,
+  x < q80, max_leverage * 0,
+  x < q90, max_leverage * 0,
+  x > q90, max_leverage * 0,
+  default = 0
+), env = list(x = var_)]
+strategy = as.xts.data.table(dt_[, .(date,
+                                     strategy = (signal * target_hour),
+                                     benchmark = target_hour)])
+strategy_daily = apply.daily(strategy[, 1], function(x) {prod(1 + x) - 1})
+strategy_daily$benchmark = apply.daily(strategy[, 2], function(x) {prod(1 + x) - 1})
+charts.PerformanceSummary(strategy_daily)
+SharpeRatio.annualized(strategy_daily)
+Return.annualized(strategy_daily)
+lapply(strategy_daily, function(x) min(Drawdowns(x)))
+PerformanceAnalytics::sd.annualized(strategy_daily)
+# charts.PerformanceSummary(strategy_daily["2020/"])
+########### TEST #############
+
 
 
 # ENSAMBLE ----------------------------------------------------------------

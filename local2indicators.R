@@ -2,6 +2,7 @@ library(data.table)
 library(lubridate)
 library(finutils)
 library(ggplot2)
+library(fExtremes)
 
 
 # SETUP -------------------------------------------------------------------
@@ -72,7 +73,7 @@ files_liquid[ticker %in% symbols_dv_1000[, unique(symbol)], univ_1000 := TRUE]
 # Foor loop over uni files
 uni_names = c("univ_100", "univ_500", "univ_1000")
 for (uni in uni_names) {
-  # uni = "univ_500"
+  # uni = "univ_100"
   print(uni)
 
   # Keep
@@ -121,11 +122,17 @@ for (uni in uni_names) {
   indicators_sum = dt_[, lapply(.SD, sum, na.rm = TRUE), by = c('date'), .SDcols = radf_vars]
   setnames(indicators_sum, radf_vars, paste0("sum_", radf_vars))
 
-  # Expected Shartfall
-  # indicators_es = dt[, lapply(.SD, function(x) {
-  #   if (length(x) < 2) return(NA_real_)
-  #   PerformanceAnalytics::ES(diff(x), p = 0.05, method = "modified")
-  # }), by = date, .SDcols = radf_vars]
+  # Value at risk
+  indicators_var_05 = dt_[, lapply(.SD, function(x) fExtremes::VaR(x)), by = c('date'), .SDcols = radf_vars]
+  setnames(indicators_var_05, radf_vars, paste0("var05_", radf_vars))
+  indicators_var_01 = dt_[, lapply(.SD, function(x) fExtremes::VaR(x, alpha = 0.01)), by = c('date'), .SDcols = radf_vars]
+  setnames(indicators_var_01, radf_vars, paste0("var01_", radf_vars))
+
+  # CVAR
+  indicators_cvar_05 = dt_[, lapply(.SD, function(x) fExtremes::CVaR(x)), by = c('date'), .SDcols = radf_vars]
+  setnames(indicators_cvar_05, radf_vars, paste0("cvar05_", radf_vars))
+  indicators_cvar_01 = dt_[, lapply(.SD, function(x) fExtremes::CVaR(x, alpha = 0.01)), by = c('date'), .SDcols = radf_vars]
+  setnames(indicators_cvar_01, radf_vars, paste0("cvar01_", radf_vars))
 
   # Merge indicators
   indicators = Reduce(
@@ -141,7 +148,11 @@ for (uni in uni_names) {
       indicators_sd,
       indicators_median,
       indicators_sum,
-      indicators_mean
+      indicators_mean,
+      indicators_var_05,
+      indicators_var_01,
+      indicators_cvar_05,
+      indicators_cvar_01
     )
   )
   setorder(indicators, date)
