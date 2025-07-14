@@ -9,4 +9,4 @@
 
 cd ${PBS_O_WORKDIR}
 
-apptainer run image.sif padobran_predictors_daily.R
+apptainer run image.sif padobran_predictors_daily_firms.R
