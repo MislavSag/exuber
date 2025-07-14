@@ -56,34 +56,34 @@ for (s in prices[, unique(symbol)]) {
 # Create sh file for predictors
 if (grepl("firms", PATH_PRICES)) {
   cont = sprintf(
-    "#!/bin/bash
+"#!/bin/bash
 
-    #PBS -N exuber_predictions
-    #PBS -l ncpus=1
-    #PBS -l mem=2GB
-    #PBS -J 1-%d
-    #PBS -o logs
-    #PBS -j oe
+#PBS -N exuber_predictions
+#PBS -l ncpus=1
+#PBS -l mem=2GB
+#PBS -J 1-%d
+#PBS -o logs
+#PBS -j oe
 
-    cd ${PBS_O_WORKDIR}
+cd ${PBS_O_WORKDIR}
 
-    apptainer run image.sif padobran_predictors_daily.R",
+apptainer run image.sif padobran_predictors_daily.R",
     length(list.files(prices_dir)))
   writeLines(cont, "padobran_predictors_daily_firms.sh")
 } else {
   cont = sprintf(
     "#!/bin/bash
 
-    #PBS -N exuber_predictions
-    #PBS -l ncpus=1
-    #PBS -l mem=2GB
-    #PBS -J 1-%d
-    #PBS -o logs
-    #PBS -j oe
+#PBS -N exuber_predictions
+#PBS -l ncpus=1
+#PBS -l mem=2GB
+#PBS -J 1-%d
+#PBS -o logs
+#PBS -j oe
 
-    cd ${PBS_O_WORKDIR}
+cd ${PBS_O_WORKDIR}
 
-    apptainer run image.sif padobran_predictors_daily.R",
+apptainer run image.sif padobran_predictors_daily.R",
     length(list.files(prices_dir)))
   writeLines(cont, "padobran_predictors_daily.sh")
 }
