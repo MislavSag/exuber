@@ -3,19 +3,25 @@ library(finutils)
 
 
 # Setup
-PATH_PRICES = "D:/strategies/exuber/daily"
+PATH_PRICES = "D:/strategies/exuber/daily_firms"
 
 # Import daily data and find 1000 most liquid stocks every month
-prices = qc_daily(
-  file_path = "F:/lean/data/stocks_daily.csv",
-  min_obs = 252,
-  duplicates = "fast"
-  # profiles_fmp = TRUE,
-  # fmp_api_key = Sys.getenv("APIKEY")
-)
+if (grepl("firms", PATH_PRICES)) {
+  prices = qc_daily(
+    file_path = "F:/lean/data/stocks_daily.csv",
+    min_obs = 252,
+    duplicates = "fast",
+    profiles_fmp = TRUE,
+    fmp_api_key = Sys.getenv("APIKEY")
+  )
+} else {
+  prices = qc_daily(file_path = "F:/lean/data/stocks_daily.csv", min_obs = 252, duplicates = "fast")
+}
 
 # Remove ETF's
-# prices = prices[isEtf == FALSE & isFund == FALSE]
+if (grepl("firms", PATH_PRICES)) {
+  prices = prices[isEtf == FALSE & isFund == FALSE]
+}
 
 # Downsample to monthly data and keep most liquid symbols by month
 prices[, month := data.table::yearmon(date)]
@@ -27,9 +33,11 @@ pricesm[, dv_rank := frankv(dollar_volume, order = -1L, ties.method = "first"), 
 pricesm[month == 2025][order(dv_rank)]
 
 # Extract symbols
-symbols = pricesm[dv_rank <= 1750, unique(symbol)]
-length(symbols)
-length(symbols) / prices[, uniqueN(symbol)]
+if (!grepl("firms", PATH_PRICES)) {
+  symbols = pricesm[dv_rank <= 1750, unique(symbol)]
+  length(symbols)
+  length(symbols) / prices[, uniqueN(symbol)]
+}
 
 # Save every symbol separately
 prices_dir = file.path(PATH_PRICES, "prices")
@@ -46,21 +54,39 @@ for (s in prices[, unique(symbol)]) {
 }
 
 # Create sh file for predictors
-cont = sprintf(
-  "#!/bin/bash
+if (grepl("firms", PATH_PRICES)) {
+  cont = sprintf(
+    "#!/bin/bash
 
-#PBS -N exuber_predictions
-#PBS -l ncpus=1
-#PBS -l mem=2GB
-#PBS -J 1-%d
-#PBS -o logs
-#PBS -j oe
+    #PBS -N exuber_predictions
+    #PBS -l ncpus=1
+    #PBS -l mem=2GB
+    #PBS -J 1-%d
+    #PBS -o logs
+    #PBS -j oe
 
-cd ${PBS_O_WORKDIR}
+    cd ${PBS_O_WORKDIR}
 
-apptainer run image.sif padobran_predictors.R",
-  length(list.files(prices_dir)))
-writeLines(cont, "padobran_predictors_daily.sh")
+    apptainer run image.sif padobran_predictors_daily.R",
+    length(list.files(prices_dir)))
+  writeLines(cont, "padobran_predictors_daily_firms.sh")
+} else {
+  cont = sprintf(
+    "#!/bin/bash
+
+    #PBS -N exuber_predictions
+    #PBS -l ncpus=1
+    #PBS -l mem=2GB
+    #PBS -J 1-%d
+    #PBS -o logs
+    #PBS -j oe
+
+    cd ${PBS_O_WORKDIR}
+
+    apptainer run image.sif padobran_predictors_daily.R",
+    length(list.files(prices_dir)))
+  writeLines(cont, "padobran_predictors_daily.sh")
+}
 
 # Add to padobran
 # scp -r /home/sn/data/strategies/pead/prices padobran:/home/jmaric/peadml/prices

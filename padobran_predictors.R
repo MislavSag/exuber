@@ -4,11 +4,11 @@ library(finfeatures)
 
 # paths
 if (interactive()) {
-  PATH_PRICES     = file.path("D:/strategies/exuber/prices")
-  PATH_PREDICTORS = file.path("D:/strategies/exuber/predictors")
+  PATH_PRICES     = file.path("D:/strategies/exuber/daily/prices")
+  PATH_PREDICTORS = file.path("D:/strategies/exuber/predictors_daily")
 } else {
-  PATH_PRICES = file.path("prices")
-  PATH_PREDICTORS = file.path("predictors")
+  PATH_PRICES = file.path("daily", "prices")
+  PATH_PREDICTORS = file.path("predictors_daily")
 }
 
 # Create directory if it doesnt exists
@@ -29,9 +29,9 @@ symbol_i = symbols[i]
 
 # Import Ohlcv data
 ohlcv = fread(file.path(PATH_PRICES, paste0(symbol_i, ".csv")))
-if (attr(ohlcv$date, "tzone") == "UTC") {
-  attr(ohlcv$date, "tzone") <- "America/New_York"
-}
+# if (attr(ohlcv$date, "tzone") == "UTC") {
+#   attr(ohlcv$date, "tzone") <- "America/New_York"
+# }
 # tail(ohlcv, 15)
 ohlcv[symbol == "a"]
 head(ohlcv, 20)
@@ -40,7 +40,7 @@ ohlcv = Ohlcv$new(ohlcv[, .(symbol, date, open, high, low, close, volume)],
 
 # Exuber
 exuber_init = RollingExuber$new(
-  windows = c(100, 200, 400, 800),
+  windows = c(100, 400, 800, 1000),
   workers = 1L,
   at = 1:nrow(ohlcv$X),
   lag = 0L,
