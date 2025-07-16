@@ -33,7 +33,7 @@ ohlcv = Ohlcv$new(ohlcv[, .(symbol, date, open, high, low, close, volume)], date
 
 # Exuber
 exuber_init = RollingExuber$new(
-  windows = c(100, 400, 800, 1000),
+  windows = c(1200),
   workers = 1L,
   at = 1:nrow(ohlcv$X),
   lag = 0L,
