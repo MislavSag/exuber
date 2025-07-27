@@ -3,7 +3,7 @@
 #PBS -N exuber_predictions
 #PBS -l ncpus=1
 #PBS -l mem=2GB
-#PBS -J 1-9998
+#PBS -J 1-5429
 #PBS -o logs
 #PBS -j oe
 

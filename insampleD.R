@@ -6,6 +6,8 @@ library(fExtremes)
 library(TTR)
 library(roll)
 library(matrixStats)
+library(PerformanceAnalytics)
+library(ggplot2)
 
 
 # SETUP -------------------------------------------------------------------
@@ -13,7 +15,6 @@ library(matrixStats)
 if (interactive()) {
   PATH = "D:/strategies/exuber"
 }
-
 
 
 # DATA --------------------------------------------------------------------
@@ -27,13 +28,19 @@ prices = qc_daily_parquet(
 spy = prices[symbol == "spy"]
 
 # Exuber data
-files = list.files("D:/strategies/exuber/predictors_daily_firms", full.names = TRUE)
-cols = c("symbol", "date", "exuber_1000_0_adf_log", "exuber_1000_0_sadf_log",
-         "exuber_1000_0_gsadf_log", "exuber_1000_0_bsadf_log")
-exuber = lapply(files, function(s) fread(s, select = cols))
+files = list.files("D:/strategies/exuber/predictors_daily", full.names = TRUE)
+length(files)
+exuber = lapply(files, function(s) fread(s))
 exuber = rbindlist(exuber, fill = TRUE)
 setorder(exuber, symbol, date)
 exuber = na.omit(exuber)
+
+# Checks
+exuber[, .N, by = date] |>
+  ggplot(aes(date, N)) +
+  geom_line() +
+  labs(title = "Number of observations per day in exuber data") +
+  theme_minimal()
 
 
 # DATA --------------------------------------------------------------------
@@ -54,17 +61,17 @@ setnames(indicators_mean, radf_vars, paste0("mean_", radf_vars))
 indicators_sum = exuber[, lapply(.SD, sum, na.rm = TRUE), by = c('date'), .SDcols = radf_vars]
 setnames(indicators_sum, radf_vars, paste0("sum_", radf_vars))
 
-# Value at risk
-indicators_var_05 = exuber[, lapply(.SD, function(x) fExtremes::VaR(x)), by = c('date'), .SDcols = radf_vars]
-setnames(indicators_var_05, radf_vars, paste0("var05_", radf_vars))
-indicators_var_01 = exuber[, lapply(.SD, function(x) fExtremes::VaR(x, alpha = 0.01)), by = c('date'), .SDcols = radf_vars]
-setnames(indicators_var_01, radf_vars, paste0("var01_", radf_vars))
-
-# CVAR
-indicators_cvar_05 = exuber[, lapply(.SD, function(x) fExtremes::CVaR(x)), by = c('date'), .SDcols = radf_vars]
-setnames(indicators_cvar_05, radf_vars, paste0("cvar05_", radf_vars))
-indicators_cvar_01 = exuber[, lapply(.SD, function(x) fExtremes::CVaR(x, alpha = 0.01)), by = c('date'), .SDcols = radf_vars]
-setnames(indicators_cvar_01, radf_vars, paste0("cvar01_", radf_vars))
+# # Value at risk
+# indicators_var_05 = exuber[, lapply(.SD, function(x) fExtremes::VaR(x)), by = c('date'), .SDcols = radf_vars]
+# setnames(indicators_var_05, radf_vars, paste0("var05_", radf_vars))
+# indicators_var_01 = exuber[, lapply(.SD, function(x) fExtremes::VaR(x, alpha = 0.01)), by = c('date'), .SDcols = radf_vars]
+# setnames(indicators_var_01, radf_vars, paste0("var01_", radf_vars))
+#
+# # CVAR
+# indicators_cvar_05 = exuber[, lapply(.SD, function(x) fExtremes::CVaR(x)), by = c('date'), .SDcols = radf_vars]
+# setnames(indicators_cvar_05, radf_vars, paste0("cvar05_", radf_vars))
+# indicators_cvar_01 = exuber[, lapply(.SD, function(x) fExtremes::CVaR(x, alpha = 0.01)), by = c('date'), .SDcols = radf_vars]
+# setnames(indicators_cvar_01, radf_vars, paste0("cvar01_", radf_vars))
 
 # Merge indicators
 indicators = Reduce(
@@ -80,11 +87,11 @@ indicators = Reduce(
     indicators_sd,
     indicators_median,
     indicators_sum,
-    indicators_mean,
-    indicators_var_05,
-    indicators_var_01,
-    indicators_cvar_05,
-    indicators_cvar_01
+    indicators_mean
+    # indicators_var_05,
+    # indicators_var_01,
+    # indicators_cvar_05,
+    # indicators_cvar_01
   )
 )
 setorder(indicators, date)
@@ -105,7 +112,7 @@ backtest_data[, let(
 backtest_data = na.omit(backtest_data)
 
 # Simple backtest
-var_ = "mean_exuber_1000_0_sadf_log"
+var_ = "median_exuber_1500_0_sadf_log"
 dt_ = backtest_data[, .(date, target_hour, x, close), env = list(x = var_)]
 dt_[, x := EMA(x, 2), env = list(x = var_)]
 plot(dt_[, x, env = list(x = var_)])
@@ -140,7 +147,7 @@ dt_ = na.omit(dt_)
 strategy = as.xts.data.table(dt_[, .(date,
                                      strategy = (signal * target_hour),
                                      benchmark = target_hour)])
-strategy_daily = apply.daily(strategy[, 1], function(x) {prod(1 + x) - 1})
+strategy_daily = xts::apply.daily(strategy[, 1], function(x) {prod(1 + x) - 1})
 strategy_daily$benchmark = apply.daily(strategy[, 2], function(x) {prod(1 + x) - 1})
 charts.PerformanceSummary(strategy_daily)
 SharpeRatio.annualized(strategy_daily)
@@ -153,10 +160,10 @@ PerformanceAnalytics::sd.annualized(strategy_daily)
 
 # BUY LOW RISK ------------------------------------------------------------
 # Calculate quantiles for all sd predictors that are initialy smoothed by EMA
-# file.remove("indicators_q.csv")
+# file.remove("indicators_daily_q.csv")
 file_name = "indicators_daily_q.csv"
 if (!file.exists(file_name)) {
-  exuber_predictors = colnames(backtest_data)[grepl("1000", colnames(backtest_data))]
+  exuber_predictors = colnames(backtest_data)[grepl("1500", colnames(backtest_data))]
   dt_ = backtest_data[, .SD, .SD = c("date", "target_hour", "close", exuber_predictors)]
   dt_[, (exuber_predictors) := lapply(.SD, function(x) (x + EMA(x, 7) + EMA(x, 7*5) + EMA(x, 7*10)) / 4),
       .SDcols = exuber_predictors]
